@@ -21,6 +21,71 @@ namespace RpgApi.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("RPGAPI.Models.Arma", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Dano")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("TB_ARMAS", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Dano = 80,
+                            Nome = "Ak-47"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Dano = 60,
+                            Nome = "Katana"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Dano = 90,
+                            Nome = "Granada"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Dano = 100,
+                            Nome = "Bazuca"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Dano = 95,
+                            Nome = "Excalibur"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Dano = 40,
+                            Nome = "Estilingue"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            Dano = 70,
+                            Nome = "Revolver"
+                        });
+                });
+
             modelBuilder.Entity("RpgApi.Models.Personagem", b =>
                 {
                     b.Property<int>("Id")
