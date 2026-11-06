@@ -83,10 +83,8 @@ namespace RpgApi.Data
             modelBuilder.Entity<PersonagemHabilidade>().HasData
             (
                 new PersonagemHabilidade() { PersonagemId = 1, HabilidadeId = 1 },
-                new PersonagemHabilidade() { PersonagemId = 1, HabilidadeId = 2 },
                 new PersonagemHabilidade() { PersonagemId = 2, HabilidadeId = 2 },
                 new PersonagemHabilidade() { PersonagemId = 3, HabilidadeId = 2 },
-                new PersonagemHabilidade() { PersonagemId = 3, HabilidadeId = 3 },
                 new PersonagemHabilidade() { PersonagemId = 4, HabilidadeId = 3 },
                 new PersonagemHabilidade() { PersonagemId = 5, HabilidadeId = 1 },
                 new PersonagemHabilidade() { PersonagemId = 6, HabilidadeId = 2 },

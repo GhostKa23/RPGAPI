@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 using RpgApi.Models;
@@ -10,7 +11,7 @@ namespace RPGAPI.Models
     {
         public int PersonagemId { get; set; }
 
-        public Personagem Personagem {get; set;} = null!;
+        public Personagem? Personagem {get; set;} = null!;
 
         public int HabilidadeId { get; set; }        
 

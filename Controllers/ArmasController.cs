@@ -59,9 +59,16 @@ namespace RPGAPI.Controllers
             try
             {
                 if (novaArma.Dano > 100)
-                {
                     throw new Exception("Dano não pode ser maior que 100");
-                }
+
+                    Personagem? p = await _context.TB_PERSONAGENS
+                    .FirstOrDefaultAsync(p => p.Id == novaArma.PersonagemId);
+
+                    if(p ==null)
+                        throw new Exception ("Não existe personagem com o Id informado");
+
+
+                
                 await _context.TB_ARMAS.AddAsync(novaArma);
                 await _context.SaveChangesAsync();
 
@@ -79,9 +86,14 @@ namespace RPGAPI.Controllers
             try
             {
                 if (novaArma.Dano > 100)
-                {
                     throw new System.Exception("Dano não pode ser maior que 100");
-                }
+                
+                Personagem? p = await _context.TB_PERSONAGENS
+                    .FirstOrDefaultAsync(p => p.Id == novaArma.PersonagemId);
+
+                    if(p ==null)
+                        throw new Exception ("Não existe personagem com o Id informado");
+                        
                 _context.TB_ARMAS.Update(novaArma);
                 int linhasAfetadas = await _context.SaveChangesAsync();
 
