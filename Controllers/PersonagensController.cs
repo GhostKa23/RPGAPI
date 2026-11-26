@@ -2,13 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RpgApi.Data;
 using RpgApi.Models;
+using RPGAPI.Models;
 
 namespace RPGAPI.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("[controller]")]
     public class PersonagensController : ControllerBase
@@ -28,6 +31,7 @@ namespace RPGAPI.Controllers
             {
                 Personagem? p = await _context.TB_PERSONAGENS
                 .Include(ar => ar.Arma)//Carrega a propriedade Arma do objeto p
+                .Include(us => us.Usuario)
                 .Include(ph => ph.PersonagemHabilidades)
                     .ThenInclude(h =>h.Habilidade)//Carrega a lista de personagemHabilidade de p
                 .FirstOrDefaultAsync(pBusca => pBusca.Id == id);
@@ -111,5 +115,175 @@ namespace RPGAPI.Controllers
                 return BadRequest(ex.Message);
             }
         }
+
+        [HttpPost("DeletePersonagemHabilidade")]
+public async Task<IActionResult> DeleteAsync(PersonagemHabilidade ph)
+{
+    try
+    {
+        PersonagemHabilidade? phRemover = await _context.TB_PERSONAGENS_HABILIDADES
+            .FirstOrDefaultAsync(phBusca => phBusca.PersonagemId == ph.PersonagemId && phBusca.HabilidadeId == ph.HabilidadeId);
+            
+        if (phRemover == null)
+            throw new System.Exception("Personagem ou Habilidade não encontrados");
+            
+        _context.TB_PERSONAGENS_HABILIDADES.Remove(phRemover);
+        int linhasAfetadas = await _context.SaveChangesAsync();
+        return Ok(linhasAfetadas);
+    }
+    catch (System.Exception ex)
+    {
+        return BadRequest(ex.Message);
+    }
+}
+
+[HttpPut("RestaurarPontosVida")]
+public async Task<IActionResult> RestaurarPontosVidaAsync(Personagem p)
+{
+    try
+    {
+        int linhasAfetadas = 0;
+        Personagem? pEncontrado = await _context.TB_PERSONAGENS.FirstOrDefaultAsync(pBusca => pBusca.Id == p.Id);
+        pEncontrado.PontosVida = 100;
+        
+        bool atualizou = await TryUpdateModelAsync<Personagem>(pEncontrado, "p", pAtualizar => pAtualizar.PontosVida);
+        // EF vai detectar e atualizar apenas as colunas que foram alteradas.
+        if (atualizou)
+        {
+            linhasAfetadas = await _context.SaveChangesAsync();
+        }
+        return Ok(linhasAfetadas);
+    }
+    catch (System.Exception ex)
+    {
+        return BadRequest(ex.Message);
+    }
+}
+
+[HttpPut("AtualizarFoto")]
+public async Task<IActionResult> AtualizarFotoAsync(Personagem p)
+{
+    try
+    {
+        Personagem personagem = await _context.TB_PERSONAGENS
+            .FirstOrDefaultAsync(x => x.Id == p.Id);
+            
+        personagem.FotoPersonagem = p.FotoPersonagem;
+        var attach = _context.Attach(personagem);
+        attach.Property(x => x.Id).IsModified = false;
+        attach.Property(x => x.FotoPersonagem).IsModified = true;
+        
+        int linhasAfetadas = await _context.SaveChangesAsync();
+        return Ok(linhasAfetadas);
+    }
+    catch (System.Exception ex)
+    {
+        return BadRequest(ex.Message);
+    }
+}
+
+[HttpPut("ZerarRanking")]
+public async Task<IActionResult> ZerarRankingAsync(Personagem p)
+{
+    try
+    {
+        Personagem pEncontrado = await _context.TB_PERSONAGENS.FirstOrDefaultAsync(pBusca => pBusca.Id == p.Id);
+        pEncontrado.Disputas = 0;
+        pEncontrado.Vitorias = 0;
+        pEncontrado.Derrotas = 0;
+        int linhasAfetadas = 0;
+        
+        bool atualizou = await TryUpdateModelAsync<Personagem>(pEncontrado, "p",
+            pAtualizar => pAtualizar.Disputas,
+            pAtualizar => pAtualizar.Vitorias,
+            pAtualizar => pAtualizar.Derrotas);
+            
+        if (atualizou)
+        {
+            linhasAfetadas = await _context.SaveChangesAsync();
+        }
+        return Ok(linhasAfetadas);
+    }
+    catch (System.Exception ex)
+    {
+        return BadRequest(ex.Message);
+    }
+}
+
+[HttpPut("ZerarRankingRestaurarVidas")]
+public async Task<IActionResult> ZerarRankingRestaurarVidasAsync()
+{
+    try
+    {
+        List<Personagem> lista = await _context.TB_PERSONAGENS.ToListAsync();
+        foreach (Personagem p in lista)
+        {
+            await ZerarRankingAsync(p);
+            await RestaurarPontosVidaAsync(p);
+        }
+        return Ok();
+    }
+    catch (System.Exception ex)
+    {
+        return BadRequest(ex.Message);
+    }
+}
+        [HttpGet("GetByUser/{userId}")]
+public async Task<IActionResult> GetByUserAsync(int userId)
+{
+    try
+    {
+        List<Personagem> lista = await _context.TB_PERSONAGENS
+            .Where(u => u.Usuario.Id == userId)
+            .ToListAsync();
+        return Ok(lista);
+    }
+    catch (System.Exception ex)
+    {
+        return BadRequest(ex.Message);
+    }
+}
+
+[HttpGet("GetByPerfil/{userId}")]
+public async Task<IActionResult> GetByPerfilAsync(int userId)
+{
+    try
+    {
+        Usuario usuario = await _context.TB_USUARIOS
+            .FirstOrDefaultAsync(x => x.Id == userId);
+            
+        List<Personagem> lista = new List<Personagem>();
+        if (usuario.Perfil == "Admin")
+        {
+            lista = await _context.TB_PERSONAGENS.ToListAsync();
+        }
+        else
+        {
+            lista = await _context.TB_PERSONAGENS
+                .Where(p => p.Usuario.Id == userId).ToListAsync();
+        }
+        return Ok(lista);
+    }
+    catch (System.Exception ex)
+    {
+        return BadRequest(ex.Message);
+    }
+}
+
+[HttpGet("GetByNomeAproximado/{nomePersonagem}")]
+public async Task<IActionResult> GetByNomeAproximado(string nomePersonagem)
+{
+    try
+    {
+        List<Personagem> lista = await _context.TB_PERSONAGENS
+            .Where(p => p.Nome.ToLower().Contains(nomePersonagem.ToLower()))
+            .ToListAsync();
+        return Ok(lista);
+    }
+    catch (System.Exception ex)
+    {
+        return BadRequest(ex.Message);
+    }
+}
     }
 }
